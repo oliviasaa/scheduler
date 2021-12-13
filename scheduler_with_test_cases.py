@@ -78,8 +78,6 @@ Qtotal_vector = [10, 25, 100]
 Qtotal = Qtotal_vector[Test_case_granularity-1]                                                                              
 
 max_messages = 1_000_000
-file_name_output = 'results_' + test_case_name + '.json'
-f_output = open(file_name_output,'w')
 
 # NODES INITIALIZATION
 buffers = [[[] for j in range(N_nodes)] for i in range(N_nodes)]                                    #
@@ -185,9 +183,15 @@ def update_filtered_next_scheduling_event(i, filtered_next_scheduling_event, buf
         filtered_next_scheduling_event[i] = next_scheduling_event[i]
 
 # auxiliary printing function
-def print_to_file():
-    data = [N_nodes, comm_graph, rate_in, total_rate_in, base_delay, mana, total_mana, Qtotal, nu, max_messages, time_of_beggining_of_new_round, messages_received, time_received, node_of_issuance, test_case_name]
+def print_to_file(file_number):
+    file_name_output = 'results_' + test_case_name + str(file_number) + '.json'
+    f_output = open(file_name_output,'w')
+    if file_number == -1:
+        data = [node_of_issuance, N_nodes, comm_graph, rate_in, total_rate_in, base_delay, mana, total_mana, Qtotal, nu, max_messages, node_of_issuance, test_case_name]
+    else:
+        data = [time_of_beggining_of_new_round, messages_received, time_received]
     json.dump(data, f_output)
+    f_output.close()
 
 # ------------------------------------------------------
 #
@@ -231,6 +235,10 @@ for message_number in range(1,max_messages+1):
     messages_received[next_issuing_node].append(message_number)                                                                         # |\ updates the history of the issuer
     time_received[next_issuing_node].append(next_issuance_time)                                                                         # |/
     filtered_next_scheduling_event[next_issuing_node] = next_scheduling_event[next_issuing_node]                                        # update (real) next scheduling events
-    
-print_to_file()
-f_output.close()
+
+    if message_number % 10_000 == 0:    
+        print_to_file(message_number // 10_000)
+        time_of_beggining_of_new_round = [[] for i in range(N_nodes)] 
+        messages_received = [[] for i in range(N_nodes)]        
+        time_received = [[] for i in range(N_nodes)]        
+    print_to_file(-1)
